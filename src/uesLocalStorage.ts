@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
+  // initial value
   const [value, setValue] = useState<T>(() => {
     const jsonValue = localStorage.getItem(key);
     if (jsonValue == null) {
@@ -14,6 +15,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
     }
   });
 
+  // update the value into a localstorage data
   useEffect(() => {
     localStorage.setItem(key, JSON.stringify(value));
   }, [value, key]);

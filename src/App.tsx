@@ -79,7 +79,11 @@ function App() {
               />
             }
           />
-          <Route path="/:id">
+          <Route
+            path="/:id"
+            // element={NoteLayout notes={notesWithTags}}
+          >
+
             <Route index element={<h1>Show</h1>} />
             <Route path="edit" element={<h1>Edit</h1>} />
           </Route>

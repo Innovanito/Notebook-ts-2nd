@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Badge, Button, Card, Col, Form, Row, Stack } from 'react-bootstrap'
+import { Badge, Button, Card, Col, Form, Modal, Row, Stack } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import ReactSelect from 'react-select'
 import { Note, Tag } from './App'
@@ -14,11 +14,21 @@ type SimplifiedNote = {
 type NoteListProps = {
   availableTags: Tag[]
   notes: Note[]
+  onDeleteTag: (id: string) => void
+  onUpdateTag: (id: string, label: string) => void
 }
 
-const NoteList = ({availableTags, notes}: NoteListProps) => {
+type EditTagsModalProps = {
+  show: boolean
+  availableTags: Tag[]
+  handleClose: () => void
+  onDeleteTag: (id: string) => void
+  onUpdateTag: (id: string, label: string) => void
+}
+const NoteList = ({availableTags, notes, onDeleteTag, onUpdateTag}: NoteListProps) => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([])
   const [title, setTitle] = useState("")
+  const [editTagsModalIsOpen, setEditTagsModalIsOpen] = useState(false)
 
   const filteredNotes = useMemo(() => {
     return notes.filter(note => {
@@ -40,63 +50,72 @@ const NoteList = ({availableTags, notes}: NoteListProps) => {
           <Link to='/new'>
             <Button variant='primary'>Create</Button>
           </Link>
-            <Button variant='outline-secondary'>Edit Tags</Button>
+            <Button
+              variant='outline-secondary'
+              onClick={() => setEditTagsModalIsOpen(true)}
+            >Edit Tags</Button>
         </Stack>
       </Col>
-    </Row>
-    <Form>
-      <Row className='mb-4'>
-          {/* Title Form */}
-          <Col>
-            <Form.Group controlId='title'>
-              <Form.Label>Title</Form.Label>
-              <Form.Control
-                type='text'
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
-          {/* Tags Form */}
-          <Col>
-            <Form.Group controlId='tags'>
-              <Form.Label>Tags</Form.Label>
-              <ReactSelect
-                value={selectedTags.map(tag => {
-                  return {
-                    label: tag.label,
-                    value: tag.id
-                  }
-                })}
-                options={availableTags.map(tag => {
-                  return {
-                    label: tag.label,
-                    value: tag.id
-                  }
-                })}
-                onChange={tags => {
-                  setSelectedTags(
-                    tags.map(tag => {
-                      return {
-                        label: tag.label,
-                        id: tag.value
-                      }
-                  }))
-                }}
-                isMulti
-              />
-            </Form.Group>
-          </Col>
       </Row>
-    </Form>
-    <Row xs={1} sm={2} lg={3} xl={4} className='g-3'>
-      {filteredNotes.map(note => (
-        <Col key={note.id}>
-          <NoteCard id={note.id} title={note.title} tags={note.tags} />
-        </Col>
-      ))}
-    </Row>
-      
+      <Form>
+        <Row className='mb-4'>
+            {/* Title Form */}
+            <Col>
+              <Form.Group controlId='title'>
+                <Form.Label>Title</Form.Label>
+                <Form.Control
+                  type='text'
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+            {/* Tags Form */}
+            <Col>
+              <Form.Group controlId='tags'>
+                <Form.Label>Tags</Form.Label>
+                <ReactSelect
+                  value={selectedTags.map(tag => {
+                    return {
+                      label: tag.label,
+                      value: tag.id
+                    }
+                  })}
+                  options={availableTags.map(tag => {
+                    return {
+                      label: tag.label,
+                      value: tag.id
+                    }
+                  })}
+                  onChange={tags => {
+                    setSelectedTags(
+                      tags.map(tag => {
+                        return {
+                          label: tag.label,
+                          id: tag.value
+                        }
+                    }))
+                  }}
+                  isMulti
+                />
+              </Form.Group>
+            </Col>
+        </Row>
+      </Form>
+      <Row xs={1} sm={2} lg={3} xl={4} className='g-3'>
+        {filteredNotes.map(note => (
+          <Col key={note.id}>
+            <NoteCard id={note.id} title={note.title} tags={note.tags} />
+          </Col>
+        ))}
+      </Row>
+      <EditTagsModal
+        onUpdateTag={onUpdateTag}
+        onDeleteTag={onDeleteTag}
+        show={editTagsModalIsOpen}
+        handleClose={() => setEditTagsModalIsOpen(false)}
+        availableTags={availableTags}
+      />
     </>
   )
 }
@@ -127,4 +146,40 @@ function NoteCard({ id, title, tags }: SimplifiedNote) {
       </Card.Body>
     </Card>
   )
+}
+
+function EditTagsModal({ availableTags,
+  handleClose,
+  show,
+  onDeleteTag,
+  onUpdateTag 
+}: EditTagsModalProps) {
+  return <Modal show={show} onHide={handleClose}>
+    <Modal.Header closeButton>
+      <Modal.Title>Edit TAgs</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <Form>
+        <Stack gap={2}>
+          {availableTags.map(tag => (
+            <Row key={tag.id}>
+              <Col>
+                <Form.Control
+                  type="text" 
+                  value={tag.label}
+                  onChange={(e)=> onUpdateTag(tag.id, e.target.value)}
+                />
+              </Col>
+              <Col xs="auto">
+                <Button
+                  variant="outline-danger"
+                  onClick={() => onDeleteTag(tag.id)}
+                >&times;</Button>
+              </Col>
+            </Row>
+          ))}
+        </Stack>
+      </Form>
+    </Modal.Body>
+  </Modal>
 }
